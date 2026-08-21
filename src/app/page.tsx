@@ -216,14 +216,9 @@ export default function Home() {
         <Pattern variant="background" color="#C94F32" className="opacity-[0.06]" />
         
         <div className="relative z-10">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3">
-              <Logo size="lg" variant="light" />
-              <div>
-                <p className="text-xs text-sand tracking-widest uppercase mt-1">More Momos. More Memories.</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
+          {/* Top bar — status + history */}
+          <div className="flex justify-end items-center mb-6">
+            <div className="flex items-center gap-2">
               <span className="text-xs opacity-60">
                 {isCloudConfigured() ? '☁️' : '📱'}
               </span>
@@ -235,6 +230,11 @@ export default function Home() {
                 {showHistory ? '← Back' : '📋 History'}
               </button>
             </div>
+          </div>
+
+          {/* Centered Logo + Wordmark + Tagline */}
+          <div className="flex justify-center">
+            <Logo size="full" variant="light" showTagline />
           </div>
         </div>
 

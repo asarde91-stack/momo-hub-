@@ -94,8 +94,13 @@ export default function SettingsPage() {
       <header className="header-charcoal p-5 pb-8 relative momo-fold-bg">
         <Pattern variant="background" color="#C94F32" className="opacity-[0.06]" />
         <div className="relative z-10">
-          <h1 className="font-heading text-2xl font-bold" style={{ color: 'var(--cream)' }}>Settings</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--sand)' }}>Configure your shop</p>
+          <div className="flex items-center gap-3 mb-1">
+            <Logo size="sm" variant="light" />
+            <div>
+              <h1 className="font-heading text-2xl font-bold" style={{ color: 'var(--cream)' }}>Settings</h1>
+              <p className="text-xs" style={{ color: 'var(--sand)' }}>Configure your shop</p>
+            </div>
+          </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0">
           <svg width="100%" height="12" viewBox="0 0 400 12" preserveAspectRatio="none">

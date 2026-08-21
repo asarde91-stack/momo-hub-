@@ -1,61 +1,136 @@
 'use client';
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  variant?: 'light' | 'dark' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  variant?: 'light' | 'dark';
+  showTagline?: boolean;
   className?: string;
 }
 
-export default function Logo({ size = 'md', variant = 'light', className = '' }: LogoProps) {
+export default function Logo({ size = 'md', variant = 'light', showTagline = false, className = '' }: LogoProps) {
+  const cream = '#F5EBDD';
+  const terracotta = '#C94F32';
+  const charcoal = '#20201C';
+
+  const fillColor = variant === 'light' ? cream : charcoal;
+  const hubColor = terracotta;
+
   const sizes = {
-    sm: { width: 32, height: 32, text: 'text-xs' },
-    md: { width: 40, height: 40, text: 'text-sm' },
-    lg: { width: 56, height: 56, text: 'text-base' },
-    xl: { width: 80, height: 80, text: 'text-xl' },
+    sm: { icon: 40, scale: 0.5 },
+    md: { icon: 56, scale: 0.7 },
+    lg: { icon: 80, scale: 1 },
+    xl: { icon: 120, scale: 1.5 },
+    full: { icon: 100, scale: 1.2 },
   };
 
   const s = sizes[size];
-  const fillColor = variant === 'light' ? '#F5EBDD' : '#C94F32';
-  const textColor = variant === 'light' ? '#F5EBDD' : '#20201C';
-  const subTextColor = variant === 'light' ? '#DBB98A' : '#C94F32';
 
-  if (variant === 'full') {
+  // M Icon — exact match from brand
+  const MIcon = ({ width }: { width: number }) => (
+    <svg width={width} height={width * 1.1} viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Left leg */}
+      <rect x="10" y="8" width="12" height="72" rx="2" fill={fillColor} />
+      {/* Right leg */}
+      <rect x="78" y="8" width="12" height="72" rx="2" fill={fillColor} />
+      {/* V-shape top connecting the legs */}
+      <path
+        d="M10 8 L50 50 L90 8"
+        stroke={fillColor}
+        strokeWidth="12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Center dome/pinch at V bottom */}
+      <ellipse cx="50" cy="52" rx="6" ry="4" fill={fillColor} />
+      {/* Pleat lines radiating downward from center */}
+      <line x1="50" y1="56" x2="50" y2="95" stroke={fillColor} strokeWidth="5" strokeLinecap="round" />
+      <line x1="50" y1="56" x2="32" y2="92" stroke={fillColor} strokeWidth="5" strokeLinecap="round" />
+      <line x1="50" y1="56" x2="68" y2="92" stroke={fillColor} strokeWidth="5" strokeLinecap="round" />
+      <line x1="50" y1="56" x2="20" y2="85" stroke={fillColor} strokeWidth="4" strokeLinecap="round" />
+      <line x1="50" y1="56" x2="80" y2="85" stroke={fillColor} strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+
+  // Full logo with wordmark
+  if (size === 'full') {
     return (
       <div className={`flex flex-col items-center ${className}`}>
-        {/* Icon Mark */}
-        <svg width={s.width} height={s.height} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* Pleated M shape — inspired by momo folds */}
-          <path
-            d="M40 8 L20 30 L12 42 L20 42 L28 32 L32 42 L24 56 L16 68 L24 68 L32 58 L40 42 L48 58 L56 68 L64 68 L56 56 L48 42 L52 32 L60 42 L68 42 L60 30 Z"
-            fill={fillColor}
-            stroke={fillColor}
-            strokeWidth="1"
-            strokeLinejoin="round"
-          />
-        </svg>
-        {/* Wordmark */}
-        <div className="mt-2 text-center">
-          <div className="text-[10px] font-body tracking-[0.3em] text-charcoal/60 uppercase">The</div>
-          <div className="font-heading text-charcoal text-lg font-bold leading-none tracking-wide">MOMO</div>
-          <div className="flex items-center gap-2 justify-center">
-            <div className="h-px w-4 bg-terracotta" />
-            <div className="font-heading text-terracotta text-sm font-bold tracking-widest">HUB</div>
-            <div className="h-px w-4 bg-terracotta" />
+        <MIcon width={s.icon} />
+        <div className="mt-4 text-center">
+          <div
+            className="font-body text-xs tracking-[0.35em] uppercase"
+            style={{ color: fillColor, opacity: 0.7 }}
+          >
+            The
+          </div>
+          <div
+            className="font-heading text-4xl font-bold leading-none tracking-wide"
+            style={{ color: fillColor }}
+          >
+            MOMO
+          </div>
+          <div className="flex items-center gap-3 justify-center mt-0.5">
+            <div className="h-px w-6" style={{ background: hubColor }} />
+            <div
+              className="font-heading text-xl font-bold tracking-[0.2em]"
+              style={{ color: hubColor }}
+            >
+              HUB
+            </div>
+            <div className="h-px w-6" style={{ background: hubColor }} />
+          </div>
+        </div>
+        {showTagline && (
+          <div className="mt-5 text-center space-y-0.5">
+            <div className="text-xs tracking-[0.2em] font-medium" style={{ color: fillColor }}>
+              MORE MOMOS.
+            </div>
+            <div className="text-xs tracking-[0.2em] font-medium" style={{ color: fillColor }}>
+              MORE PEOPLE.
+            </div>
+            <div className="text-xs tracking-[0.2em] font-bold" style={{ color: hubColor }}>
+              MORE MEMORIES.
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Compact logo for headers (icon + wordmark inline)
+  if (size === 'lg' || size === 'xl') {
+    return (
+      <div className={`flex items-center gap-3 ${className}`}>
+        <MIcon width={s.icon} />
+        <div className="flex flex-col">
+          <div
+            className="text-[9px] tracking-[0.3em] uppercase font-body"
+            style={{ color: fillColor, opacity: 0.6 }}
+          >
+            The
+          </div>
+          <div
+            className="font-heading text-2xl font-bold leading-none tracking-wide"
+            style={{ color: fillColor }}
+          >
+            MOMO
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-px w-3" style={{ background: hubColor }} />
+            <div
+              className="font-heading text-sm font-bold tracking-[0.15em]"
+              style={{ color: hubColor }}
+            >
+              HUB
+            </div>
+            <div className="h-px w-3" style={{ background: hubColor }} />
           </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <svg width={s.width} height={s.height} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <path
-        d="M40 8 L20 30 L12 42 L20 42 L28 32 L32 42 L24 56 L16 68 L24 68 L32 58 L40 42 L48 58 L56 68 L64 68 L56 56 L48 42 L52 32 L60 42 L68 42 L60 30 Z"
-        fill={fillColor}
-        stroke={fillColor}
-        strokeWidth="1"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  // Small sizes — icon only
+  return <MIcon width={s.icon} />;
 }
