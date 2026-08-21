@@ -1,16 +1,26 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Poppins, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-body',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-heading',
+});
 
 export const metadata: Metadata = {
-  title: 'Momo Hub - Order Management',
+  title: 'The Momo Hub — More Momos. More Memories.',
   description: 'Track orders and manage your momo shop',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'MomoHub',
   },
 };
@@ -20,7 +30,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#FF6B35',
+  themeColor: '#20201C',
 };
 
 export default function RootLayout({
@@ -33,8 +43,8 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className={inter.className}>
-        <main className="min-h-screen bg-gray-50">
+      <body className={`${poppins.variable} ${playfair.variable} font-body`}>
+        <main className="min-h-screen bg-cream">
           {children}
         </main>
       </body>

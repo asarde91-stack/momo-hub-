@@ -15,16 +15,21 @@ export default function Navigation() {
 
   return (
     <nav className="bottom-nav">
-      {navItems.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`nav-item ${pathname === item.href ? 'active' : ''}`}
-        >
-          <span className="text-2xl">{item.icon}</span>
-          <span className="text-xs mt-1">{item.label}</span>
-        </Link>
-      ))}
+      {navItems.map((item) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`nav-item ${isActive ? 'active' : ''}`}
+          >
+            <span className={`text-2xl transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
+              {item.icon}
+            </span>
+            <span className="text-[10px] mt-0.5 leading-tight font-medium">{item.label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 }

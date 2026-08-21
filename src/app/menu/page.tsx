@@ -3,6 +3,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { db, MenuItem } from '@/lib/db';
 import Navigation from '@/components/Navigation';
+import Logo from '@/components/Logo';
+import Pattern from '@/components/Pattern';
+import ConfirmModal from '@/components/ConfirmModal';
+import Toast from '@/components/Toast';
 
 export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -17,6 +21,8 @@ export default function MenuPage() {
     image: '',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'error' | 'info' }[]>([]);
 
   useEffect(() => {
     loadMenuItems();
@@ -26,6 +32,14 @@ export default function MenuPage() {
     const items = await db.menu_items.orderBy('sort_order').toArray();
     setMenuItems(items);
     setLoading(false);
+  }
+
+  function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
   }
 
   function getFilteredItems() {
@@ -52,6 +66,7 @@ export default function MenuPage() {
     await db.menu_items.add(newItem);
     resetForm();
     await loadMenuItems();
+    showToast(`${formData.name} added to menu`);
   }
 
   async function handleUpdateItem() {
@@ -68,13 +83,13 @@ export default function MenuPage() {
 
     resetForm();
     await loadMenuItems();
+    showToast('Item updated');
   }
 
   async function handleDeleteItem(id: string) {
-    if (confirm('Are you sure you want to delete this item?')) {
-      await db.menu_items.delete(id);
-      await loadMenuItems();
-    }
+    await db.menu_items.delete(id);
+    await loadMenuItems();
+    showToast('Item deleted', 'info');
   }
 
   async function handleToggleActive(id: string, currentActive: boolean) {
@@ -88,7 +103,6 @@ export default function MenuPage() {
 
   async function handleMoveUp(item: MenuItem) {
     if (item.sort_order <= 1) return;
-    
     const prevItem = menuItems.find(i => i.sort_order === item.sort_order - 1);
     if (prevItem) {
       await db.menu_items.update(item.id, { sort_order: item.sort_order - 1, synced: false });
@@ -100,7 +114,6 @@ export default function MenuPage() {
   async function handleMoveDown(item: MenuItem) {
     const maxSort = Math.max(...menuItems.map(i => i.sort_order));
     if (item.sort_order >= maxSort) return;
-    
     const nextItem = menuItems.find(i => i.sort_order === item.sort_order + 1);
     if (nextItem) {
       await db.menu_items.update(item.id, { sort_order: item.sort_order + 1, synced: false });
@@ -129,7 +142,6 @@ export default function MenuPage() {
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
@@ -140,209 +152,188 @@ export default function MenuPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="spinner"></div>
+      <div className="pb-20 page-enter">
+        <div className="header-charcoal text-cream p-5 pb-8 relative">
+          <div className="skeleton h-7 w-40" style={{ background: 'rgba(245,235,221,0.1)' }} />
+          <div className="skeleton h-4 w-32 mt-2" style={{ background: 'rgba(245,235,221,0.1)' }} />
+        </div>
+        <div className="m-4 -mt-4 space-y-3 relative z-10">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="skeleton-card skeleton" style={{ animationDelay: `${i * 0.1}s` }} />
+          ))}
+        </div>
       </div>
     );
   }
 
   const filteredItems = getFilteredItems();
+  const activeCount = menuItems.filter(i => i.active).length;
+  const totalCount = menuItems.length;
 
   return (
-    <div className="pb-20">
-      <header className="bg-primary text-white p-4 shadow-md">
-        <h1 className="text-2xl font-bold">Menu Management</h1>
-        <p className="text-sm opacity-90">Add, edit, or remove items</p>
+    <div className="pb-20 page-enter">
+      {/* Toasts */}
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+        />
+      ))}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <ConfirmModal
+          title="Delete Item"
+          message="This will permanently remove this item from your menu. Orders using this item won't be affected."
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={() => {
+            handleDeleteItem(deleteTarget);
+            setDeleteTarget(null);
+          }}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {/* ===== HEADER ===== */}
+      <header className="header-charcoal p-5 pb-8 relative momo-fold-bg">
+        <Pattern variant="background" color="#C94F32" className="opacity-[0.06]" />
+        <div className="relative z-10">
+          <h1 className="font-heading text-2xl font-bold" style={{ color: 'var(--cream)' }}>Menu</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--sand)' }}>{activeCount} active · {totalCount} total</p>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg width="100%" height="12" viewBox="0 0 400 12" preserveAspectRatio="none">
+            <path d="M0 12 L20 0 L40 12 L60 0 L80 12 L100 0 L120 12 L140 0 L160 12 L180 0 L200 12 L220 0 L240 12 L260 0 L280 12 L300 0 L320 12 L340 0 L360 12 L380 0 L400 12" 
+              fill="var(--cream)" />
+          </svg>
+        </div>
       </header>
 
-      {/* Add/Edit Form */}
-      {showAddForm && (
-        <div className="m-4 p-4 bg-white rounded-xl shadow-sm">
-          <h3 className="font-semibold mb-3">
-            {editingItem ? 'Edit Item' : 'Add New Item'}
-          </h3>
-          <div className="space-y-3">
-            {/* Image Upload */}
-            <div className="flex items-center gap-4">
-              <div 
-                className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {formData.image ? (
-                  <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-3xl">📷</span>
-                )}
-              </div>
-              <div className="flex-1">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-sm text-primary font-medium"
-                >
-                  Upload Photo
-                </button>
-                <p className="text-xs text-gray-500">Tap to add image</p>
-              </div>
+      <div className="-mt-1 relative z-10">
+        {/* Add/Edit Form */}
+        {showAddForm && (
+          <div className="mx-4 p-5 card-elevated fade-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-base" style={{ color: 'var(--charcoal)' }}>
+                {editingItem ? '✏️ Edit Item' : '✨ Add New Item'}
+              </h3>
+              <button onClick={resetForm} className="text-xl p-1 active:scale-90 transition-transform"
+                style={{ color: 'var(--sand)' }}>✕</button>
             </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div 
+                  className="image-container w-20 h-20 cursor-pointer active:scale-95 transition-transform"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {formData.image ? (
+                    <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-3xl">📷</span>
+                  )}
+                </div>
+                <div>
+                  <input type="file" ref={fileInputRef} accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  <button onClick={() => fileInputRef.current?.click()} className="text-sm font-semibold active:scale-95 transition-transform"
+                    style={{ color: 'var(--terracotta)' }}>Upload Photo</button>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--sand)' }}>Tap to add image</p>
+                </div>
+              </div>
 
-            <input
-              type="text"
-              placeholder="Item name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full p-3 border rounded-lg"
-            />
-            <input
-              type="number"
-              placeholder="Price (₹)"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full p-3 border rounded-lg"
-            />
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as 'veg' | 'non-veg' })}
-              className="w-full p-3 border rounded-lg"
-            >
-              <option value="veg">Vegetarian 🥬</option>
-              <option value="non-veg">Non-Vegetarian 🍗</option>
-            </select>
-            <div className="flex gap-2">
-              <button
-                onClick={editingItem ? handleUpdateItem : handleAddItem}
-                className="flex-1 bg-primary text-white py-3 rounded-lg font-semibold"
-              >
-                {editingItem ? 'Update' : 'Add Item'}
-              </button>
-              <button
-                onClick={resetForm}
-                className="flex-1 bg-gray-200 py-3 rounded-lg font-semibold"
-              >
-                Cancel
-              </button>
+              <input type="text" placeholder="Item name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" />
+              <input type="number" placeholder="Price (₹)" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="input-field" />
+              <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value as 'veg' | 'non-veg' })} className="input-field">
+                <option value="veg">🥬 Vegetarian</option>
+                <option value="non-veg">🍗 Non-Vegetarian</option>
+              </select>
+              <div className="pt-1">
+                <button onClick={editingItem ? handleUpdateItem : handleAddItem} className="btn-primary">
+                  {editingItem ? 'Update Item' : 'Add to Menu'}
+                </button>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Add Button */}
+        {!showAddForm && (
+          <div className="mx-4 mb-3 mt-4">
+            <button onClick={() => setShowAddForm(true)} className="btn-primary flex items-center justify-center gap-2">
+              <span className="text-lg">+</span>
+              Add New Item
+            </button>
+          </div>
+        )}
+
+        {/* Category Tabs */}
+        <div className="mx-4 flex gap-2 mb-4">
+          {(['all', 'veg', 'non-veg'] as const).map((cat) => (
+            <button key={cat} onClick={() => setActiveCategory(cat)}
+              className={`category-tab ${activeCategory === cat ? 'active' : ''}`}>
+              {cat === 'all' ? '🍽️ All' : cat === 'veg' ? '🥬 Veg' : '🍗 Non-Veg'}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* Add Button */}
-      {!showAddForm && (
-        <div className="m-4">
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="w-full bg-primary text-white py-3 rounded-xl font-semibold"
-          >
-            + Add New Item
-          </button>
-        </div>
-      )}
+        {/* Menu Items */}
+        <div className="px-4">
+          <div className="space-y-2.5">
+            {filteredItems.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">📝</div>
+                <h3 className="font-heading font-semibold text-lg mb-1" style={{ color: 'var(--charcoal)' }}>No items here</h3>
+                <p className="text-sm" style={{ color: 'var(--sand)' }}>
+                  {activeCategory === 'all' ? 'Add your first menu item to get started' : `No ${activeCategory} items yet`}
+                </p>
+              </div>
+            ) : (
+              filteredItems.map((item, index) => (
+                <div key={item.id} className={`list-item stagger-item ${!item.active ? 'opacity-50' : ''}`}
+                  style={{ animationDelay: `${index * 0.04}s` }}>
+                  <div className="flex items-start gap-3">
+                    <div className={`image-container w-14 h-14 flex-shrink-0 ${item.category === 'non-veg' ? 'ring-2 ring-red-100' : 'ring-2 ring-green-100'}`}>
+                      {item.image_url ? (
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl">{item.category === 'veg' ? '🥬' : '🍗'}</span>
+                      )}
+                    </div>
 
-      {/* Category Tabs */}
-      <div className="mx-4 flex gap-2 mb-4">
-        {(['all', 'veg', 'non-veg'] as const).map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`flex-1 py-2 rounded-lg font-semibold text-sm capitalize ${
-              activeCategory === cat
-                ? 'bg-primary text-white'
-                : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            {cat === 'all' ? '🍽️ All' : cat === 'veg' ? '🥬 Veg' : '🍗 Non-Veg'}
-          </button>
-        ))}
-      </div>
-
-      {/* Menu Items List */}
-      <div className="p-4">
-        <div className="space-y-3">
-          {filteredItems.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No items in this category
-            </div>
-          ) : (
-            filteredItems.map((item) => (
-              <div
-                key={item.id}
-                className={`bg-white p-4 rounded-xl shadow-sm ${
-                  !item.active ? 'opacity-50' : ''
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Image or Icon */}
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-3xl">
-                        {item.category === 'veg' ? '🥬' : '🍗'}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Item Info */}
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-semibold">{item.name}</div>
-                        <div className="text-lg font-bold text-primary">₹{item.price}</div>
-                        <div className="text-xs text-gray-400 capitalize">{item.category}</div>
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleToggleActive(item.id, item.active)}
-                          className={`px-2 py-1 rounded text-xs ${
-                            item.active
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-500'
-                          }`}
-                        >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-semibold text-sm">{item.name}</div>
+                          <div className="text-lg font-bold font-heading mt-0.5" style={{ color: 'var(--terracotta)' }}>₹{item.price}</div>
+                        </div>
+                        <button onClick={() => handleToggleActive(item.id, item.active)}
+                          className={item.active ? 'badge-active' : 'badge-inactive'}>
                           {item.active ? 'Active' : 'Off'}
                         </button>
                       </div>
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => handleMoveUp(item)}
-                        className="p-2 bg-gray-100 rounded text-sm"
-                        disabled={item.sort_order <= 1}
-                      >
-                        ⬆️
-                      </button>
-                      <button
-                        onClick={() => handleMoveDown(item)}
-                        className="p-2 bg-gray-100 rounded text-sm"
-                      >
-                        ⬇️
-                      </button>
-                      <button
-                        onClick={() => startEditing(item)}
-                        className="flex-1 p-2 bg-blue-100 text-blue-700 rounded text-sm font-medium"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteItem(item.id)}
-                        className="p-2 bg-red-100 text-red-700 rounded text-sm"
-                      >
-                        🗑️
-                      </button>
+                      <div className="flex gap-1.5 mt-3">
+                        <button onClick={() => handleMoveUp(item)} disabled={item.sort_order <= 1}
+                          className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                          style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬆️</button>
+                        <button onClick={() => handleMoveDown(item)}
+                          className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                          style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬇️</button>
+                        <button onClick={() => startEditing(item)}
+                          className="flex-1 p-2 rounded-lg text-sm font-medium active:scale-95 transition-all"
+                          style={{ background: 'rgba(201, 79, 50, 0.08)', color: 'var(--terracotta)' }}>✏️ Edit</button>
+                        <button onClick={() => setDeleteTarget(item.id)}
+                          className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                          style={{ background: 'rgba(220, 38, 38, 0.08)', color: '#dc2626' }}>🗑️</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
         </div>
       </div>
 
