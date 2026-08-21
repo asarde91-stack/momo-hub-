@@ -316,7 +316,7 @@ export default function Home() {
                         <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xl">
-                          {item.category === 'veg' ? '🥬' : '🍗'}
+                          '🥟'
                         </span>
                       )}
                     </div>
