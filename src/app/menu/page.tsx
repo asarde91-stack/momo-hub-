@@ -251,8 +251,8 @@ export default function MenuPage() {
               <input type="text" placeholder="Item name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" />
               <input type="number" placeholder="Price (₹)" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="input-field" />
               <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value as 'veg' | 'non-veg' })} className="input-field">
-                <option value="veg">🥟 Vegetarian</option>
-                <option value="non-veg">🥟 Non-Vegetarian</option>
+                <option value="veg">🥘 Vegetarian</option>
+                <option value="non-veg">🥘 Non-Vegetarian</option>
               </select>
               <div className="pt-1">
                 <button onClick={editingItem ? handleUpdateItem : handleAddItem} className="btn-primary">
@@ -303,7 +303,7 @@ export default function MenuPage() {
                       {item.image_url ? (
                         <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-2xl">'🥟'</span>
+                        <img src="/momo-placeholder.jpg" alt="Momo" className="w-full h-full object-cover" />
                       )}
                     </div>
 
