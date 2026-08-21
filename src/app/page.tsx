@@ -315,7 +315,7 @@ export default function Home() {
                       {item.image_url ? (
                         <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                       ) : (
-                        <img src="/momo-placeholder.jpg" alt="Momo" className="w-full h-full object-cover" />
+                        <span className="text-xl">🥟</span>
                       )}
                     </div>
                     <div className="text-left">
