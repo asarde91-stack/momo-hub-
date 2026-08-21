@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/db';
+import { db, Order } from '@/lib/db';
 import Navigation from '@/components/Navigation';
 import {
   BarChart,
@@ -31,21 +31,99 @@ interface ChartData {
   revenue: number;
 }
 
+interface DayDetail extends Order {
+  itemName?: string;
+  itemPrice?: number;
+}
+
 const COLORS = ['#FF6B35', '#004E89', '#FFA500', '#4CAF50', '#9C27B0'];
 
 export default function ReportsPage() {
-  const [reportType, setReportType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
+  const [reportType, setReportType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly' | 'pick'>('daily');
+  const [pickedDate, setPickedDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD
+  });
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [pieData, setPieData] = useState<{ name: string; value: number }[]>([]);
+  const [dayDetails, setDayDetails] = useState<DayDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadReport();
-  }, [reportType]);
+  }, [reportType, pickedDate]);
 
   async function loadReport() {
     setLoading(true);
+
+    if (reportType === 'pick') {
+      await loadPickDateReport();
+    } else {
+      await loadRangeReport();
+    }
+    setLoading(false);
+  }
+
+  async function loadPickDateReport() {
+    const [year, month, day] = pickedDate.split('-').map(Number);
+    const startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const endDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+
+    const orders = await db.orders
+      .where('timestamp')
+      .between(startDate, endDate, true, true)
+      .toArray();
+
+    const menuItems = await db.menu_items.toArray();
+    const menuItemMap = new Map(menuItems.map(item => [item.id, item]));
+
+    // Build detailed list
+    const details: DayDetail[] = orders.map(order => ({
+      ...order,
+      itemName: menuItemMap.get(order.menu_item_id)?.name || 'Unknown',
+      itemPrice: menuItemMap.get(order.menu_item_id)?.price || 0,
+    }));
+    details.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    setDayDetails(details);
+
+    // Build summary
+    const itemMap = new Map<string, { count: number; revenue: number }>();
+    let totalOrders = 0;
+    let totalRevenue = 0;
+    const itemTotals = new Map<string, number>();
+
+    for (const order of orders) {
+      const menuItem = menuItemMap.get(order.menu_item_id);
+      if (menuItem) {
+        const existing = itemMap.get(menuItem.name) || { count: 0, revenue: 0 };
+        itemMap.set(menuItem.name, {
+          count: existing.count + order.quantity,
+          revenue: existing.revenue + order.total_price,
+        });
+        totalOrders += order.quantity;
+        totalRevenue += order.total_price;
+        itemTotals.set(menuItem.name, (itemTotals.get(menuItem.name) || 0) + order.quantity);
+      }
+    }
+
+    const dateLabel = startDate.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+    setReportData([{
+      date: dateLabel,
+      totalOrders,
+      totalRevenue,
+      items: Array.from(itemMap.entries()).map(([name, data]) => ({ name, ...data })),
+    }]);
+    setChartData([{ name: dateLabel, orders: totalOrders, revenue: totalRevenue }]);
+    setPieData(
+      Array.from(itemTotals.entries())
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5)
+    );
+  }
+
+  async function loadRangeReport() {
     const now = new Date();
     let startDate: Date;
 
@@ -62,6 +140,8 @@ export default function ReportsPage() {
       case 'yearly':
         startDate = new Date(now.getFullYear() - 4, 0, 1);
         break;
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
     }
 
     const orders = await db.orders
@@ -122,8 +202,6 @@ export default function ReportsPage() {
           });
           totalOrders += order.quantity;
           totalRevenue += order.total_price;
-
-          // Track item totals for pie chart
           const itemTotal = itemTotals.get(menuItem.name) || 0;
           itemTotals.set(menuItem.name, itemTotal + order.quantity);
         }
@@ -133,33 +211,24 @@ export default function ReportsPage() {
         date,
         totalOrders,
         totalRevenue,
-        items: Array.from(itemMap.entries()).map(([name, data]) => ({
-          name,
-          ...data,
-        })),
+        items: Array.from(itemMap.entries()).map(([name, data]) => ({ name, ...data })),
       });
 
-      chartItems.push({
-        name: date,
-        orders: totalOrders,
-        revenue: totalRevenue,
-      });
+      chartItems.push({ name: date, orders: totalOrders, revenue: totalRevenue });
     }
 
-    // Sort by date (newest first for reports, oldest first for charts)
     reports.sort((a, b) => b.date.localeCompare(a.date));
     chartItems.reverse();
 
-    // Create pie chart data
     const pieItems = Array.from(itemTotals.entries())
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 5); // Top 5 items
+      .slice(0, 5);
 
     setReportData(reports);
     setChartData(chartItems);
     setPieData(pieItems);
-    setLoading(false);
+    setDayDetails([]);
   }
 
   const totalRevenue = reportData.reduce((sum, report) => sum + report.totalRevenue, 0);
@@ -192,7 +261,7 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `momo-hub-report-${reportType}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `momo-hub-report-${reportType}-${pickedDate}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -225,21 +294,44 @@ export default function ReportsPage() {
       </header>
 
       {/* Report Type Selector */}
-      <div className="m-4 flex gap-2">
-        {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((type) => (
+      <div className="m-4 flex gap-2 flex-wrap">
+        {(['daily', 'weekly', 'monthly', 'yearly', 'pick'] as const).map((type) => (
           <button
             key={type}
             onClick={() => setReportType(type)}
-            className={`flex-1 py-2 rounded-lg font-semibold text-sm capitalize ${
+            className={`flex-1 min-w-[60px] py-2 rounded-lg font-semibold text-sm capitalize ${
               reportType === type
                 ? 'bg-primary text-white'
                 : 'bg-gray-200 text-gray-700'
             }`}
           >
-            {type}
+            {type === 'pick' ? '📅 Pick' : type}
           </button>
         ))}
       </div>
+
+      {/* Date Picker (shown when 'pick' is selected) */}
+      {reportType === 'pick' && (
+        <div className="mx-4 mb-4 bg-white p-4 rounded-xl shadow-sm">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Select a date
+          </label>
+          <input
+            type="date"
+            value={pickedDate}
+            onChange={(e) => setPickedDate(e.target.value)}
+            className="w-full p-3 border rounded-lg text-lg"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            📅 Viewing: {new Date(pickedDate + 'T00:00:00').toLocaleDateString('en-IN', {
+              weekday: 'long',
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </p>
+        </div>
+      )}
 
       {/* Summary */}
       <div className="m-4 bg-white p-4 rounded-xl shadow-sm">
@@ -328,12 +420,42 @@ export default function ReportsPage() {
 
       {/* Detailed Report List */}
       <div className="p-4">
-        <h3 className="font-semibold mb-3">Detailed Report</h3>
-        {reportData.length === 0 ? (
+        <h3 className="font-semibold mb-3">
+          {reportType === 'pick' ? 'Order Details' : 'Detailed Report'}
+        </h3>
+        {reportType === 'pick' && dayDetails.length > 0 ? (
+          /* Pick mode: show individual orders with timestamps */
+          <div className="space-y-2">
+            {dayDetails.map((order) => (
+              <div
+                key={order.id}
+                className="bg-white p-3 rounded-xl shadow-sm flex justify-between items-center"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">✓</span>
+                  <div>
+                    <div className="font-medium">{order.itemName}</div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(order.timestamp).toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold">₹{order.total_price}</div>
+                  <div className="text-xs text-gray-500">Qty: {order.quantity}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : reportData.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             No data available for this period
           </div>
         ) : (
+          /* Range mode: show grouped by date */
           <div className="space-y-4">
             {reportData.map((report) => (
               <div key={report.date} className="bg-white p-4 rounded-xl shadow-sm">
