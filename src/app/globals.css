@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #FF6B35;
+  --secondary: #004E89;
+  --accent: #FFA500;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Mobile-first button styles */
+.menu-button {
+  @apply w-full p-4 rounded-xl shadow-md transition-all duration-200 
+         active:scale-95 active:shadow-sm
+         flex items-center justify-between;
+}
+
+.menu-button:active {
+  transform: scale(0.95);
+}
+
+/* Order count badge */
+.order-badge {
+  @apply absolute -top-2 -right-2 bg-red-500 text-white 
+         rounded-full w-6 h-6 flex items-center justify-center 
+         text-sm font-bold;
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 
+         flex justify-around items-center h-16 px-4 z-50;
+}
+
+.nav-item {
+  @apply flex flex-col items-center justify-center text-gray-500 
+         hover:text-primary transition-colors;
+}
+
+.nav-item.active {
+  @apply text-primary;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply w-8 h-8 border-4 border-primary border-t-transparent 
+         rounded-full animate-spin;
+}
