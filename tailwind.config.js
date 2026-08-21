@@ -8,7 +8,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        charcoal: '#20201C',
+        charcoal: {
+          DEFAULT: '#1a1916',
+          deep: '#0f0e0c',
+        },
         terracotta: {
           DEFAULT: '#C94F32',
           50: '#FEF2EE',
@@ -23,26 +26,30 @@ module.exports = {
           900: '#41190E',
         },
         cream: {
-          DEFAULT: '#F5EBDD',
+          DEFAULT: '#FAEDDD',
           50: '#FDFCFA',
           100: '#FAF6F0',
-          200: '#F5EBDD',
+          200: '#FAEDDD',
           300: '#EDD9C1',
           400: '#E2C4A0',
           500: '#D5AE7F',
         },
         sand: {
-          DEFAULT: '#DBB98A',
+          DEFAULT: '#D4A96A',
           50: '#FBF5EC',
           100: '#F5E8D1',
           200: '#EDD5AF',
-          300: '#DBB98A',
+          300: '#D4A96A',
           400: '#C9A06E',
           500: '#B78752',
         },
+        gold: {
+          DEFAULT: '#C8A44E',
+          light: '#E8D48B',
+        },
         primary: '#C94F32',
-        secondary: '#20201C',
-        accent: '#DBB98A',
+        secondary: '#1a1916',
+        accent: '#D4A96A',
       },
       fontFamily: {
         heading: ['"Playfair Display"', 'Georgia', 'serif'],

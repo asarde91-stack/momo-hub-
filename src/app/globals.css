@@ -3,13 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --charcoal: #20201C;
+  --charcoal: #1a1916;
+  --charcoal-deep: #0f0e0c;
   --terracotta: #C94F32;
   --terracotta-dark: #A73E27;
-  --cream: #F5EBDD;
+  --terracotta-glow: #e05a3a;
+  --cream: #FAEDDD;
   --cream-light: #FDFCFA;
-  --sand: #DBB98A;
+  --sand: #D4A96A;
   --sand-light: #F5E8D1;
+  --gold: #C8A44E;
+  --gold-light: #E8D48B;
 }
 
 * {
@@ -34,8 +38,8 @@ h1, h2, h3, .font-heading {
 
 /* ===== BRAND HEADER ===== */
 .header-charcoal {
-  background: linear-gradient(135deg, var(--charcoal) 0%, #2a2a25 100%);
-  box-shadow: 0 4px 24px rgba(32, 32, 28, 0.4);
+  background: linear-gradient(160deg, var(--charcoal-deep) 0%, var(--charcoal) 40%, #252320 100%);
+  box-shadow: 0 8px 32px rgba(15, 14, 12, 0.5), 0 2px 8px rgba(15, 14, 12, 0.3);
   color: var(--cream);
   position: relative;
   overflow: hidden;
@@ -45,7 +49,8 @@ h1, h2, h3, .font-heading {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(201, 79, 50, 0.15) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 70% 15%, rgba(201, 79, 50, 0.18) 0%, transparent 55%),
+              radial-gradient(ellipse at 20% 80%, rgba(200, 164, 78, 0.06) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -93,8 +98,8 @@ h1, h2, h3, .font-heading {
   @apply absolute -top-2 -right-2 text-white 
          rounded-full w-7 h-7 flex items-center justify-center 
          text-xs font-bold z-10;
-  background: var(--terracotta);
-  box-shadow: 0 2px 8px rgba(201, 79, 50, 0.4);
+  background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+  box-shadow: 0 2px 12px rgba(201, 79, 50, 0.5);
   animation: badge-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -120,8 +125,8 @@ h1, h2, h3, .font-heading {
 .card-elevated {
   @apply rounded-2xl p-5;
   background: white;
-  border: 1px solid rgba(219, 185, 138, 0.2);
-  box-shadow: 0 4px 20px rgba(32, 32, 28, 0.06);
+  border: 1px solid rgba(200, 164, 78, 0.15);
+  box-shadow: 0 4px 24px rgba(15, 14, 12, 0.08), 0 1px 4px rgba(15, 14, 12, 0.04);
 }
 
 .card-dark {
@@ -152,28 +157,28 @@ h1, h2, h3, .font-heading {
 /* ===== BOTTOM NAVIGATION ===== */
 .bottom-nav {
   @apply fixed bottom-0 left-0 right-0 flex justify-around items-center h-[68px] px-2 z-50;
-  background: rgba(32, 32, 28, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(219, 185, 138, 0.15);
+  background: rgba(15, 14, 12, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(200, 164, 78, 0.12);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-shadow: 0 -4px 24px rgba(32, 32, 28, 0.3);
+  box-shadow: 0 -8px 32px rgba(15, 14, 12, 0.4);
 }
 
 .nav-item {
   @apply flex flex-col items-center justify-center transition-all duration-200 py-1 px-3 rounded-xl relative;
   min-width: 64px;
-  color: rgba(245, 235, 221, 0.45);
+  color: rgba(250, 237, 221, 0.4);
 }
 
 .nav-item.active {
-  color: var(--terracotta);
+  color: var(--terracotta-glow);
 }
 
 .nav-item.active::before {
   content: '';
-  @apply absolute -top-1 w-5 h-1 rounded-full;
-  background: var(--terracotta);
+  @apply absolute -top-1 w-6 h-[2px] rounded-full;
+  background: linear-gradient(90deg, transparent, var(--terracotta-glow), transparent);
   animation: nav-indicator 0.3s ease;
 }
 
@@ -186,12 +191,12 @@ h1, h2, h3, .font-heading {
 .btn-primary {
   @apply w-full py-3.5 rounded-xl font-semibold text-sm text-white
          transition-all duration-200 active:scale-[0.98];
-  background: var(--terracotta);
-  box-shadow: 0 4px 16px rgba(201, 79, 50, 0.3);
+  background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+  box-shadow: 0 4px 20px rgba(201, 79, 50, 0.35), 0 1px 4px rgba(201, 79, 50, 0.2);
 }
 
 .btn-primary:active {
-  box-shadow: 0 2px 8px rgba(201, 79, 50, 0.2);
+  box-shadow: 0 2px 8px rgba(201, 79, 50, 0.25);
 }
 
 .btn-secondary {
@@ -229,8 +234,8 @@ h1, h2, h3, .font-heading {
 
 .category-tab.active {
   @apply text-white;
-  background: var(--terracotta);
-  box-shadow: 0 4px 12px rgba(201, 79, 50, 0.25);
+  background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+  box-shadow: 0 4px 16px rgba(201, 79, 50, 0.3);
 }
 
 .category-tab:not(.active) {
@@ -242,15 +247,16 @@ h1, h2, h3, .font-heading {
 /* ===== INPUTS ===== */
 .input-field {
   @apply w-full p-3.5 rounded-xl text-sm transition-all duration-200;
-  background: white;
-  border: 1.5px solid rgba(219, 185, 138, 0.4);
+  background: var(--cream-light);
+  border: 1.5px solid rgba(200, 164, 78, 0.25);
   color: var(--charcoal);
 }
 
 .input-field:focus {
   outline: none;
   border-color: var(--terracotta);
-  box-shadow: 0 0 0 3px rgba(201, 79, 50, 0.1);
+  box-shadow: 0 0 0 3px rgba(201, 79, 50, 0.1), 0 2px 8px rgba(201, 79, 50, 0.08);
+  background: white;
 }
 
 .input-field::placeholder {
