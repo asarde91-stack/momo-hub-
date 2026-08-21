@@ -1,5 +1,5 @@
 import { db, MenuItem, Order } from './db';
-import { supabase, CloudMenuItem, CloudOrder } from './supabase';
+import { getSupabase, CloudMenuItem, CloudOrder } from './supabase';
 
 const DEVICE_ID_KEY = 'momo-hub-device-id';
 const LAST_SYNC_KEY = 'momo-hub-last-sync';
@@ -52,7 +52,7 @@ async function pushOrders(): Promise<number> {
     created_at: new Date().toISOString(),
   }));
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('orders')
     .upsert(cloudOrders, { onConflict: 'id' });
 
@@ -70,7 +70,7 @@ async function pushOrders(): Promise<number> {
 
 // Pull menu items from cloud
 async function pullMenuItems(): Promise<number> {
-  const { data: cloudMenu, error } = await supabase
+  const { data: cloudMenu, error } = await getSupabase()
     .from('menu_items')
     .select('*')
     .order('sort_order');
@@ -143,7 +143,7 @@ async function pushMenuChanges(): Promise<number> {
     updated_at: item.updated_at.toISOString(),
   }));
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('menu_items')
     .upsert(cloudItems, { onConflict: 'id' });
 
@@ -238,5 +238,5 @@ export async function seedCloudMenu(): Promise<void> {
     updated_at: item.updated_at.toISOString(),
   }));
 
-  await supabase.from('menu_items').upsert(cloudItems, { onConflict: 'id' });
+  await getSupabase().from('menu_items').upsert(cloudItems, { onConflict: 'id' });
 }
