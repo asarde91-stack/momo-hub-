@@ -136,28 +136,44 @@ export async function getTodayOrders(): Promise<{ name: string; count: number; r
   }));
 }
 
-export async function initializeDefaultMenu(): Promise<void> {
-  const count = await db.menu_items.count();
-  if (count === 0) {
-    const now = new Date();
-    const defaultItems: MenuItem[] = [
-      // === Momos ===
-      { id: crypto.randomUUID(), name: 'Steamed Momos', price: 80, category: 'veg', active: true, sort_order: 1, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Steamed Momos', price: 90, category: 'non-veg', active: true, sort_order: 2, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Cry Momos', price: 90, category: 'veg', active: true, sort_order: 3, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Cry Momos', price: 100, category: 'non-veg', active: true, sort_order: 4, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Peri Peri Momos', price: 100, category: 'veg', active: true, sort_order: 5, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Peri Peri Momos', price: 110, category: 'non-veg', active: true, sort_order: 6, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Tandoor Momos', price: 110, category: 'veg', active: true, sort_order: 7, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Tandoor Momos', price: 120, category: 'non-veg', active: true, sort_order: 8, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Crispy Momos', price: 120, category: 'veg', active: true, sort_order: 9, section: 'momos', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Crispy Momos', price: 130, category: 'non-veg', active: true, sort_order: 10, section: 'momos', created_at: now, updated_at: now, synced: false },
-      // === Maggi ===
-      { id: crypto.randomUUID(), name: 'Plain Maggi', price: 40, category: 'veg', active: true, sort_order: 11, section: 'maggi', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Masala Maggi', price: 50, category: 'veg', active: true, sort_order: 12, section: 'maggi', created_at: now, updated_at: now, synced: false },
-      { id: crypto.randomUUID(), name: 'Momo Maggi', price: 80, category: 'veg', active: true, sort_order: 13, section: 'maggi', created_at: now, updated_at: now, synced: false },
-    ];
+const MENU_VERSION = 2; // Bump this to force-replace default menu
 
+function buildDefaultMenuItems(): MenuItem[] {
+  const now = new Date();
+  return [
+    // === Momos ===
+    { id: crypto.randomUUID(), name: 'Steamed Momos', price: 80, category: 'veg', active: true, sort_order: 1, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Steamed Momos', price: 90, category: 'non-veg', active: true, sort_order: 2, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Cry Momos', price: 90, category: 'veg', active: true, sort_order: 3, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Cry Momos', price: 100, category: 'non-veg', active: true, sort_order: 4, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Peri Peri Momos', price: 100, category: 'veg', active: true, sort_order: 5, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Peri Peri Momos', price: 110, category: 'non-veg', active: true, sort_order: 6, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Tandoor Momos', price: 110, category: 'veg', active: true, sort_order: 7, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Tandoor Momos', price: 120, category: 'non-veg', active: true, sort_order: 8, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Crispy Momos', price: 120, category: 'veg', active: true, sort_order: 9, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Crispy Momos', price: 130, category: 'non-veg', active: true, sort_order: 10, section: 'momos', created_at: now, updated_at: now, synced: false },
+    // === Maggi ===
+    { id: crypto.randomUUID(), name: 'Plain Maggi', price: 40, category: 'veg', active: true, sort_order: 11, section: 'maggi', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Masala Maggi', price: 50, category: 'veg', active: true, sort_order: 12, section: 'maggi', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Momo Maggi', price: 80, category: 'veg', active: true, sort_order: 13, section: 'maggi', created_at: now, updated_at: now, synced: false },
+  ];
+}
+
+export async function initializeDefaultMenu(): Promise<void> {
+  // Check stored menu version
+  const storedVersion = await db.settings.get('menu_version');
+  const currentVersion = storedVersion ? parseInt(storedVersion.value, 10) : 0;
+
+  if (currentVersion < MENU_VERSION) {
+    // Clear old menu and replace with current defaults
+    await db.menu_items.clear();
+    const defaultItems = buildDefaultMenuItems();
     await db.menu_items.bulkAdd(defaultItems);
+    await db.settings.put({ key: 'menu_version', value: String(MENU_VERSION), updated_at: new Date() });
+  } else if ((await db.menu_items.count()) === 0) {
+    // Fresh install — no items at all
+    const defaultItems = buildDefaultMenuItems();
+    await db.menu_items.bulkAdd(defaultItems);
+    await db.settings.put({ key: 'menu_version', value: String(MENU_VERSION), updated_at: new Date() });
   }
 }
