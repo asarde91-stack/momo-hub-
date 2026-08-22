@@ -294,41 +294,105 @@ export default function Home() {
           <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--sand)' }}>
             Quick Add
           </h2>
-          <div className="space-y-2.5">
-            {menuItems.map((item, index) => {
-              const count = getOrderCount(item.id);
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleOrderTap(item)}
-                  className={`menu-button ${item.category} stagger-item`}
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  {count > 0 && (
-                    <div className="count-badge" key={`badge-${item.id}-${count}`}>
-                      {count}
+          {(() => {
+            const sections: { key: string; label: string; icon: string }[] = [
+              { key: 'momos', label: 'Momos', icon: '🥟' },
+              { key: 'maggi', label: 'Maggi', icon: '🍜' },
+            ];
+            return (
+              <div className="space-y-5">
+                {sections.map(section => {
+                  const items = menuItems.filter(i => i.section === section.key);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={section.key}>
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <span className="text-base">{section.icon}</span>
+                        <h3 className="font-heading font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--charcoal)' }}>{section.label}</h3>
+                        <div className="flex-1 h-px" style={{ background: 'rgba(219, 185, 138, 0.3)' }} />
+                      </div>
+                      <div className="space-y-2.5">
+                        {items.map((item, index) => {
+                          const count = getOrderCount(item.id);
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => handleOrderTap(item)}
+                              className={`menu-button ${item.category} stagger-item`}
+                              style={{ animationDelay: `${index * 0.05}s` }}
+                            >
+                              {count > 0 && (
+                                <div className="count-badge" key={`badge-${item.id}-${count}`}>
+                                  {count}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-3">
+                                <div className="image-container w-11 h-11 flex-shrink-0">
+                                  {item.image_url ? (
+                                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-xl">{section.icon}</span>
+                                  )}
+                                </div>
+                                <div className="text-left">
+                                  <div className="font-semibold text-sm">{item.name}</div>
+                                  <div className="text-xs font-medium" style={{ color: 'var(--sand)' }}>₹{item.price} · {item.category === 'veg' ? 'Veg' : 'Chicken'}</div>
+                                </div>
+                              </div>
+                              <span className="font-bold text-base" style={{ color: 'var(--terracotta)', opacity: 0.5 }}>+1</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="image-container w-11 h-11 flex-shrink-0">
-                      {item.image_url ? (
-                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-xl">🥟</span>
-                      )}
+                  );
+                })}
+                {/* Uncategorized items */}
+                {menuItems.filter(i => !i.section || !sections.some(s => s.key === i.section)).length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <span className="text-base">🍽️</span>
+                      <h3 className="font-heading font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--charcoal)' }}>Other</h3>
+                      <div className="flex-1 h-px" style={{ background: 'rgba(219, 185, 138, 0.3)' }} />
                     </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-sm">{item.name}</div>
-                      <div className="text-xs font-medium" style={{ color: 'var(--sand)' }}>₹{item.price}</div>
+                    <div className="space-y-2.5">
+                      {menuItems.filter(i => !i.section || !sections.some(s => s.key === i.section)).map((item, index) => {
+                        const count = getOrderCount(item.id);
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => handleOrderTap(item)}
+                            className={`menu-button ${item.category} stagger-item`}
+                            style={{ animationDelay: `${index * 0.05}s` }}
+                          >
+                            {count > 0 && (
+                              <div className="count-badge" key={`badge-${item.id}-${count}`}>
+                                {count}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-3">
+                              <div className="image-container w-11 h-11 flex-shrink-0">
+                                {item.image_url ? (
+                                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-xl">🍽️</span>
+                                )}
+                              </div>
+                              <div className="text-left">
+                                <div className="font-semibold text-sm">{item.name}</div>
+                                <div className="text-xs font-medium" style={{ color: 'var(--sand)' }}>₹{item.price}</div>
+                              </div>
+                            </div>
+                            <span className="font-bold text-base" style={{ color: 'var(--terracotta)', opacity: 0.5 }}>+1</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  
-                  <span className="font-bold text-base" style={{ color: 'var(--terracotta)', opacity: 0.5 }}>+1</span>
-                </button>
-              );
-            })}
-          </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
 

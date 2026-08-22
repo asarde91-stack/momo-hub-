@@ -19,6 +19,7 @@ export default function MenuPage() {
     price: '',
     category: 'veg' as 'veg' | 'non-veg',
     image: '',
+    section: 'momos' as string,
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export default function MenuPage() {
       active: true,
       image_url: formData.image || undefined,
       sort_order: menuItems.length + 1,
+      section: formData.section || undefined,
       created_at: new Date(),
       updated_at: new Date(),
       synced: false,
@@ -129,13 +131,14 @@ export default function MenuPage() {
       price: item.price.toString(),
       category: item.category,
       image: item.image_url || '',
+      section: item.section || 'momos',
     });
     setShowAddForm(true);
   }
 
   function resetForm() {
     setEditingItem(null);
-    setFormData({ name: '', price: '', category: 'veg', image: '' });
+    setFormData({ name: '', price: '', category: 'veg', image: '', section: 'momos' });
     setShowAddForm(false);
   }
 
@@ -250,6 +253,10 @@ export default function MenuPage() {
 
               <input type="text" placeholder="Item name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" />
               <input type="number" placeholder="Price (₹)" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="input-field" />
+              <select value={formData.section} onChange={(e) => setFormData({ ...formData, section: e.target.value })} className="input-field">
+                <option value="momos">🥟 Momos</option>
+                <option value="maggi">🍜 Maggi</option>
+              </select>
               <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value as 'veg' | 'non-veg' })} className="input-field">
                 <option value="veg">🥘 Vegetarian</option>
                 <option value="non-veg">🥘 Non-Vegetarian</option>
@@ -278,67 +285,149 @@ export default function MenuPage() {
           {(['all', 'veg', 'non-veg'] as const).map((cat) => (
             <button key={cat} onClick={() => setActiveCategory(cat)}
               className={`category-tab ${activeCategory === cat ? 'active' : ''}`}>
-              {cat === 'all' ? '🍽️ All' : cat === 'veg' ? '🥟 Veg' : '🥟 Non-Veg'}
+              {cat === 'all' ? '🍽️ All' : cat === 'veg' ? '🥬 Veg' : '🍗 Non-Veg'}
             </button>
           ))}
         </div>
 
-        {/* Menu Items */}
+        {/* Menu Items grouped by section */}
         <div className="px-4">
-          <div className="space-y-2.5">
-            {filteredItems.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">📝</div>
-                <h3 className="font-heading font-semibold text-lg mb-1" style={{ color: 'var(--charcoal)' }}>No items here</h3>
-                <p className="text-sm" style={{ color: 'var(--sand)' }}>
-                  {activeCategory === 'all' ? 'Add your first menu item to get started' : `No ${activeCategory} items yet`}
-                </p>
-              </div>
-            ) : (
-              filteredItems.map((item, index) => (
-                <div key={item.id} className={`list-item stagger-item ${!item.active ? 'opacity-50' : ''}`}
-                  style={{ animationDelay: `${index * 0.04}s` }}>
-                  <div className="flex items-start gap-3">
-                    <div className={`image-container w-14 h-14 flex-shrink-0 ${item.category === 'non-veg' ? 'ring-2 ring-red-100' : 'ring-2 ring-green-100'}`}>
-                      {item.image_url ? (
-                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-2xl">🥟</span>
-                      )}
-                    </div>
+          {filteredItems.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">📝</div>
+              <h3 className="font-heading font-semibold text-lg mb-1" style={{ color: 'var(--charcoal)' }}>No items here</h3>
+              <p className="text-sm" style={{ color: 'var(--sand)' }}>
+                {activeCategory === 'all' ? 'Add your first menu item to get started' : `No ${activeCategory} items yet`}
+              </p>
+            </div>
+          ) : (
+            (() => {
+              const sections: { key: string; label: string; icon: string }[] = [
+                { key: 'momos', label: 'MOMOS', icon: '🥟' },
+                { key: 'maggi', label: 'MAGGI', icon: '🍜' },
+              ];
+              const uncategorized = filteredItems.filter(i => !i.section || !sections.some(s => s.key === i.section));
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-semibold text-sm">{item.name}</div>
-                          <div className="text-lg font-bold font-heading mt-0.5" style={{ color: 'var(--terracotta)' }}>₹{item.price}</div>
+              return (
+                <div className="space-y-5">
+                  {sections.map(section => {
+                    const items = filteredItems.filter(i => i.section === section.key);
+                    if (items.length === 0) return null;
+                    return (
+                      <div key={section.key}>
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <span className="text-lg">{section.icon}</span>
+                          <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--charcoal)' }}>{section.label}</h3>
+                          <div className="flex-1 h-px" style={{ background: 'rgba(219, 185, 138, 0.3)' }} />
                         </div>
-                        <button onClick={() => handleToggleActive(item.id, item.active)}
-                          className={item.active ? 'badge-active' : 'badge-inactive'}>
-                          {item.active ? 'Active' : 'Off'}
-                        </button>
-                      </div>
+                        <div className="space-y-2.5">
+                          {items.map((item, index) => (
+                            <div key={item.id} className={`list-item stagger-item ${!item.active ? 'opacity-50' : ''}`}
+                              style={{ animationDelay: `${index * 0.04}s` }}>
+                              <div className="flex items-start gap-3">
+                                <div className={`image-container w-14 h-14 flex-shrink-0 ${item.category === 'non-veg' ? 'ring-2 ring-red-100' : 'ring-2 ring-green-100'}`}>
+                                  {item.image_url ? (
+                                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-2xl">{section.icon}</span>
+                                  )}
+                                </div>
 
-                      <div className="flex gap-1.5 mt-3">
-                        <button onClick={() => handleMoveUp(item)} disabled={item.sort_order <= 1}
-                          className="p-2 rounded-lg text-sm active:scale-90 transition-all"
-                          style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬆️</button>
-                        <button onClick={() => handleMoveDown(item)}
-                          className="p-2 rounded-lg text-sm active:scale-90 transition-all"
-                          style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬇️</button>
-                        <button onClick={() => startEditing(item)}
-                          className="flex-1 p-2 rounded-lg text-sm font-medium active:scale-95 transition-all"
-                          style={{ background: 'rgba(201, 79, 50, 0.08)', color: 'var(--terracotta)' }}>✏️ Edit</button>
-                        <button onClick={() => setDeleteTarget(item.id)}
-                          className="p-2 rounded-lg text-sm active:scale-90 transition-all"
-                          style={{ background: 'rgba(220, 38, 38, 0.08)', color: '#dc2626' }}>🗑️</button>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <div className="font-semibold text-sm">{item.name}</div>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: item.category === 'veg' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)', color: item.category === 'veg' ? '#16a34a' : '#dc2626' }}>
+                                          {item.category === 'veg' ? 'Veg' : 'Chicken'}
+                                        </span>
+                                        <div className="text-lg font-bold font-heading" style={{ color: 'var(--terracotta)' }}>₹{item.price}</div>
+                                      </div>
+                                    </div>
+                                    <button onClick={() => handleToggleActive(item.id, item.active)}
+                                      className={item.active ? 'badge-active' : 'badge-inactive'}>
+                                      {item.active ? 'Active' : 'Off'}
+                                    </button>
+                                  </div>
+
+                                  <div className="flex gap-1.5 mt-3">
+                                    <button onClick={() => handleMoveUp(item)} disabled={item.sort_order <= 1}
+                                      className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                                      style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬆️</button>
+                                    <button onClick={() => handleMoveDown(item)}
+                                      className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                                      style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬇️</button>
+                                    <button onClick={() => startEditing(item)}
+                                      className="flex-1 p-2 rounded-lg text-sm font-medium active:scale-95 transition-all"
+                                      style={{ background: 'rgba(201, 79, 50, 0.08)', color: 'var(--terracotta)' }}>✏️ Edit</button>
+                                    <button onClick={() => setDeleteTarget(item.id)}
+                                      className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                                      style={{ background: 'rgba(220, 38, 38, 0.08)', color: '#dc2626' }}>🗑️</button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {uncategorized.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <span className="text-lg">🍽️</span>
+                        <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--charcoal)' }}>OTHER</h3>
+                        <div className="flex-1 h-px" style={{ background: 'rgba(219, 185, 138, 0.3)' }} />
+                      </div>
+                      <div className="space-y-2.5">
+                        {uncategorized.map((item, index) => (
+                          <div key={item.id} className={`list-item stagger-item ${!item.active ? 'opacity-50' : ''}`}
+                            style={{ animationDelay: `${index * 0.04}s` }}>
+                            <div className="flex items-start gap-3">
+                              <div className={`image-container w-14 h-14 flex-shrink-0 ${item.category === 'non-veg' ? 'ring-2 ring-red-100' : 'ring-2 ring-green-100'}`}>
+                                {item.image_url ? (
+                                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-2xl">🍽️</span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="font-semibold text-sm">{item.name}</div>
+                                    <div className="text-lg font-bold font-heading mt-0.5" style={{ color: 'var(--terracotta)' }}>₹{item.price}</div>
+                                  </div>
+                                  <button onClick={() => handleToggleActive(item.id, item.active)}
+                                    className={item.active ? 'badge-active' : 'badge-inactive'}>
+                                    {item.active ? 'Active' : 'Off'}
+                                  </button>
+                                </div>
+                                <div className="flex gap-1.5 mt-3">
+                                  <button onClick={() => handleMoveUp(item)} disabled={item.sort_order <= 1}
+                                    className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                                    style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬆️</button>
+                                  <button onClick={() => handleMoveDown(item)}
+                                    className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                                    style={{ background: 'rgba(219, 185, 138, 0.15)' }}>⬇️</button>
+                                  <button onClick={() => startEditing(item)}
+                                    className="flex-1 p-2 rounded-lg text-sm font-medium active:scale-95 transition-all"
+                                    style={{ background: 'rgba(201, 79, 50, 0.08)', color: 'var(--terracotta)' }}>✏️ Edit</button>
+                                  <button onClick={() => setDeleteTarget(item.id)}
+                                    className="p-2 rounded-lg text-sm active:scale-90 transition-all"
+                                    style={{ background: 'rgba(220, 38, 38, 0.08)', color: '#dc2626' }}>🗑️</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              ))
-            )}
-          </div>
+              );
+            })()
+          )}
         </div>
       </div>
 
