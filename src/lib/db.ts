@@ -136,7 +136,7 @@ export async function getTodayOrders(): Promise<{ name: string; count: number; r
   }));
 }
 
-const MENU_VERSION = 2; // Bump this to force-replace default menu
+const MENU_VERSION = 3; // Bump this to force-replace default menu
 
 function buildDefaultMenuItems(): MenuItem[] {
   const now = new Date();
@@ -144,8 +144,8 @@ function buildDefaultMenuItems(): MenuItem[] {
     // === Momos ===
     { id: crypto.randomUUID(), name: 'Steamed Momos', price: 80, category: 'veg', active: true, sort_order: 1, section: 'momos', created_at: now, updated_at: now, synced: false },
     { id: crypto.randomUUID(), name: 'Steamed Momos', price: 90, category: 'non-veg', active: true, sort_order: 2, section: 'momos', created_at: now, updated_at: now, synced: false },
-    { id: crypto.randomUUID(), name: 'Cry Momos', price: 90, category: 'veg', active: true, sort_order: 3, section: 'momos', created_at: now, updated_at: now, synced: false },
-    { id: crypto.randomUUID(), name: 'Cry Momos', price: 100, category: 'non-veg', active: true, sort_order: 4, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Fry Momos', price: 90, category: 'veg', active: true, sort_order: 3, section: 'momos', created_at: now, updated_at: now, synced: false },
+    { id: crypto.randomUUID(), name: 'Fry Momos', price: 100, category: 'non-veg', active: true, sort_order: 4, section: 'momos', created_at: now, updated_at: now, synced: false },
     { id: crypto.randomUUID(), name: 'Peri Peri Momos', price: 100, category: 'veg', active: true, sort_order: 5, section: 'momos', created_at: now, updated_at: now, synced: false },
     { id: crypto.randomUUID(), name: 'Peri Peri Momos', price: 110, category: 'non-veg', active: true, sort_order: 6, section: 'momos', created_at: now, updated_at: now, synced: false },
     { id: crypto.randomUUID(), name: 'Tandoor Momos', price: 110, category: 'veg', active: true, sort_order: 7, section: 'momos', created_at: now, updated_at: now, synced: false },
